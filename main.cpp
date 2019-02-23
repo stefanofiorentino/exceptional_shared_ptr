@@ -4,53 +4,56 @@
 namespace __std
 {
     template<typename T>
-    class shared_ptr
+    class exceptional_shared_ptr
     {
         std::shared_ptr<T> __ptr;
     public:
-        shared_ptr() :
+        exceptional_shared_ptr() :
                 __ptr(nullptr)
         {}
 
-        shared_ptr(shared_ptr const &ptr) :
+        exceptional_shared_ptr(exceptional_shared_ptr const &ptr) :
                 __ptr(ptr)
         {}
 
-        shared_ptr &operator=(shared_ptr const &ptr)
+        exceptional_shared_ptr &operator=(exceptional_shared_ptr const &ptr)
         {
-            shared_ptr::__ptr = ptr;
+            exceptional_shared_ptr::__ptr = ptr;
             return *this;
         }
 
-        shared_ptr(shared_ptr &&ptr) noexcept :
+        exceptional_shared_ptr(exceptional_shared_ptr &&ptr) noexcept :
+                __ptr(ptr.get())
+        {}
+
+        exceptional_shared_ptr &operator=(exceptional_shared_ptr &&ptr) noexcept
+        {
+            exceptional_shared_ptr::__ptr = ptr;
+            return *this;
+        }
+
+        explicit exceptional_shared_ptr(std::shared_ptr<T> const &ptr) :
                 __ptr(ptr)
         {}
 
-        shared_ptr &operator=(shared_ptr &&ptr) noexcept
+        exceptional_shared_ptr &operator=(std::shared_ptr<T> const &ptr)
         {
-            shared_ptr::__ptr = ptr;
+            exceptional_shared_ptr::__ptr = ptr;
             return *this;
         }
 
-        explicit shared_ptr(std::shared_ptr<T> const &ptr) :
-                __ptr(ptr)
-        {}
-
-        shared_ptr &operator=(std::shared_ptr<T> const &ptr)
-        {
-            shared_ptr::__ptr = ptr;
-            return *this;
-        }
-
-        explicit shared_ptr(std::shared_ptr<T> &&ptr) noexcept :
+        exceptional_shared_ptr(std::shared_ptr<T> &&ptr) noexcept :
                 __ptr(std::move(ptr))
         {}
 
-        shared_ptr &operator=(std::shared_ptr<T> &&ptr) noexcept
+        exceptional_shared_ptr &operator=(std::shared_ptr<T> &&ptr) noexcept
         {
-            shared_ptr::__ptr = ptr;
+            exceptional_shared_ptr::__ptr = ptr;
             return *this;
         }
+
+        T *get() const noexcept
+        { return __ptr.get(); }
 
         T *operator->() const
         {
@@ -80,13 +83,9 @@ public:
 
 int main()
 {
-    __std::shared_ptr<int> intPtr(std::make_shared<int>(12));
+    __std::exceptional_shared_ptr<int> intPtr(std::make_shared<int>(12));
 
-
-    __std::shared_ptr<int> intPtr1(std::make_shared<int>(12));
-
-
-    __std::shared_ptr<foo> exceptional;
+    __std::exceptional_shared_ptr<foo> exceptional;
     try
     {
         exceptional->bar();
@@ -100,7 +99,7 @@ int main()
         std::puts("Exception caught");
     }
 
-//    __std::shared_ptr<int> intPtr2 = std::make_shared<int>(12); // compile-error
-//    __std::shared_ptr<foo> fooPtr = std::make_shared<foo>();// compile-error
+    __std::exceptional_shared_ptr<int> intPtr2 = std::make_shared<int>(12); // compile-error
+    __std::exceptional_shared_ptr<foo> fooPtr = std::make_shared<foo>();// compile-error
     return 0;
 }
