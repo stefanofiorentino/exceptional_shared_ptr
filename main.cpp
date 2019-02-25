@@ -32,7 +32,7 @@ namespace __std
             return *this;
         }
 
-        explicit exceptional_shared_ptr(std::shared_ptr<T> const &ptr) :
+        exceptional_shared_ptr(std::shared_ptr<T> const &ptr) :
                 __ptr(ptr)
         {}
 
@@ -54,6 +54,21 @@ namespace __std
 
         T *get() const noexcept
         { return __ptr.get(); }
+
+        T &operator*() const
+        {
+            std::weak_ptr<T> __weak_ptr(__ptr);
+            if (auto p = __weak_ptr.lock())
+            {
+                return *(__ptr.get());
+            }
+            else
+            {
+                std::string s = "NullPointerException: ";
+                s += __PRETTY_FUNCTION__;
+                throw std::runtime_error(s);
+            }
+        }
 
         T *operator->() const
         {
@@ -99,7 +114,22 @@ int main()
         std::puts("Exception caught");
     }
 
-    __std::exceptional_shared_ptr<int> intPtr2 = std::make_shared<int>(12); // compile-error
-    __std::exceptional_shared_ptr<foo> fooPtr = std::make_shared<foo>();// compile-error
+    try
+    {
+        auto e = *exceptional;
+    }
+    catch (std::runtime_error const &err)
+    {
+        std::puts(err.what());
+    }
+    catch (...)
+    {
+        std::puts("Exception caught");
+    }
+
+
+    // use the implicit conversion from shared_ptr to exceptional ones
+    __std::exceptional_shared_ptr<int> intPtr2 = std::make_shared<int>(12);
+    __std::exceptional_shared_ptr<foo> fooPtr = std::make_shared<foo>();
     return 0;
 }
